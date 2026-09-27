@@ -55,3 +55,13 @@ export const capitalizeWords = (s: string) =>
     .split(" ")
     .map(capitalize)
     .join(" ");
+
+/** Dew point via the Magnus formula; `temp` is in the active units. */
+export const dewPoint = (temp: number, humidity: number, u: Units) => {
+  const c = u === "metric" ? temp : ((temp - 32) * 5) / 9;
+  const a = 17.62;
+  const b = 243.12;
+  const g = Math.log(Math.max(humidity, 1) / 100) + (a * c) / (b + c);
+  const dp = (b * g) / (a - g);
+  return u === "metric" ? dp : (dp * 9) / 5 + 32;
+};

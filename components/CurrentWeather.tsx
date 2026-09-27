@@ -12,7 +12,8 @@ import {
   Tooltip
 } from "@mantine/core";
 import { FaRegHeart, FaHeart, FaLocationDot, FaArrowsRotate } from "react-icons/fa6";
-import dayjs from "dayjs";
+import { useEffect, useState } from "react";
+import { cityTime } from "@/utils/time";
 import Image from "next/image";
 import type { CurrentWeather as CurrentWeatherT, Units } from "@/types/weather";
 import { capitalizeWords, fmtTemp } from "@/utils/format";
@@ -26,8 +27,27 @@ interface Props {
   country: string;
   units: Units;
   isLoading: boolean;
+  refreshing?: boolean;
+  /** When the data was last fetched (ms epoch). */
+  updatedAt?: number;
   onRefresh: () => void;
 }
+
+const useNow = (intervalMs: number) => {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), intervalMs);
+    return () => clearInterval(t);
+  }, [intervalMs]);
+  return now;
+};
+
+const fmtAgo = (ms: number) => {
+  const mins = Math.floor(ms / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  return `${Math.floor(mins / 60)} h ago`;
+};
 
 export default function CurrentWeatherCard({
   data,
@@ -35,8 +55,11 @@ export default function CurrentWeatherCard({
   country,
   units,
   isLoading,
+  updatedAt,
+  refreshing,
   onRefresh
 }: Props) {
+  const now = useNow(30_000);
   const dispatch = useAppDispatch();
   const active = useAppSelector((s) => s.weather.active);
   const favorites = useAppSelector((s) => s.weather.favorites);
@@ -73,8 +96,13 @@ export default function CurrentWeatherCard({
             )}
           </Group>
           <Text c="rgba(255,255,255,0.75)" size="sm">
-            {data ? dayjs.unix(data.dt).format("dddd, MMM D · h:mm A") : ""}
+            {data ? cityTime(Math.floor(now / 1000), data.timezone).format("dddd, MMM D · h:mm A") : ""}
           </Text>
+          {updatedAt && (
+            <Text c="rgba(255,255,255,0.5)" size="xs">
+              Updated {fmtAgo(now - updatedAt)}
+            </Text>
+          )}
         </Stack>
         <Group gap="xs">
           <Tooltip label={isFav ? "Remove from favorites" : "Save to favorites"} withArrow>
@@ -98,7 +126,8 @@ export default function CurrentWeatherCard({
               radius="xl"
               aria-label="Refresh"
               onClick={onRefresh}
-              disabled={isLoading}
+              loading={refreshing}
+              disabled={refreshing}
             >
               <FaArrowsRotate size={20} color="white" />
             </ActionIcon>
