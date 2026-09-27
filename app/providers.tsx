@@ -51,7 +51,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <Provider store={store}>
-      <MantineProvider theme={theme} defaultColorScheme="dark">
+      {/* The design is dark-only (hardcoded glass colors), so keep Mantine in sync */}
+      <MantineProvider theme={theme} forceColorScheme="dark">
         <Notifications position="top-right" zIndex={2000} />
         {children}
       </MantineProvider>
@@ -60,5 +61,5 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 }
 
 export function HeadColorSchemeScript() {
-  return <ColorSchemeScript defaultColorScheme="dark" />;
+  return <ColorSchemeScript forceColorScheme="dark" />;
 }

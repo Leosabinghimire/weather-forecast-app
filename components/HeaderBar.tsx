@@ -1,22 +1,13 @@
 "use client";
 
-import {
-  ActionIcon,
-  Box,
-  Group,
-  SegmentedControl,
-  Text,
-  Tooltip,
-  useMantineColorScheme
-} from "@mantine/core";
-import { FaMoon, FaSun, FaCloudBolt } from "react-icons/fa6";
+import { Box, Group, SegmentedControl, Text } from "@mantine/core";
+import { FaCloudBolt } from "react-icons/fa6";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { setUnits } from "@/lib/features/preferences/preferencesSlice";
 
 export default function HeaderBar() {
   const dispatch = useAppDispatch();
   const units = useAppSelector((s) => s.preferences.units);
-  const { colorScheme, setColorScheme } = useMantineColorScheme();
 
   return (
     <Group justify="space-between" align="center" wrap="wrap" gap="md">
@@ -64,26 +55,6 @@ export default function HeaderBar() {
             indicator: { background: "rgba(255,255,255,0.22)" }
           }}
         />
-        <Tooltip label={colorScheme === "dark" ? "Switch to light" : "Switch to dark"} withArrow>
-          <ActionIcon
-            size="lg"
-            radius="xl"
-            variant="light"
-            aria-label="Toggle color scheme"
-            onClick={() =>
-              setColorScheme(colorScheme === "dark" ? "light" : "dark")
-            }
-            styles={{
-              root: {
-                background: "rgba(255,255,255,0.08)",
-                border: "1px solid rgba(255,255,255,0.12)",
-                color: "white"
-              }
-            }}
-          >
-            {colorScheme === "dark" ? <FaSun size={18} /> : <FaMoon size={18} />}
-          </ActionIcon>
-        </Tooltip>
       </Group>
     </Group>
   );
