@@ -1,12 +1,4 @@
+# Static export (next.config.mjs `output: "export"`) — plain files, no server runtime
 [build]
   command = "npm run build"
-  functions = "netlify/functions"
-  publish = ".next"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
-[functions]
-  node_bundler = "esbuild"
+  publish = "out"
