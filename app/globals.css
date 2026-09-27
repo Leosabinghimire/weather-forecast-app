@@ -104,3 +104,25 @@ a {
 html {
   font-synthesis-weight: none;
 }
+
+/* Gentle attention pulse for warning icons */
+.alert-pulse {
+  animation: alertPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes alertPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alert-pulse {
+    animation: none;
+  }
+}

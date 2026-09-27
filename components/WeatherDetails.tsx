@@ -20,6 +20,7 @@ import {
 import type { CurrentWeather, Units } from "@/types/weather";
 import {
   degreesToCompass,
+  dewPoint,
   fmtPct,
   fmtPressure,
   fmtTemp,
@@ -53,13 +54,16 @@ export default function WeatherDetails({ data, units, isLoading }: Props) {
         {
           label: "Humidity",
           value: fmtPct(data.main.humidity),
+          sub: `Dew point ${fmtTemp(dewPoint(data.main.temp, data.main.humidity, units), units)}`,
           icon: <FaDroplet size={18} />,
           color: "blue"
         },
         {
           label: "Wind",
           value: fmtWind(data.wind.speed, units),
-          sub: `${degreesToCompass(data.wind.deg)} · ${data.wind.deg}°`,
+          sub: `${degreesToCompass(data.wind.deg)} · ${data.wind.deg}°${
+            data.wind.gust ? ` · gusts ${fmtWind(data.wind.gust, units)}` : ""
+          }`,
           icon: <FaWind size={18} />,
           color: "teal"
         },

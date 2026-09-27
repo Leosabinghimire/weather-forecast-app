@@ -9,6 +9,7 @@ import {
   useCurrentWeatherQuery,
   useForecastQuery
 } from "@/lib/features/weather/weatherApi";
+import { buildAlerts } from "@/utils/alerts";
 import { resolveMood } from "@/utils/weather";
 import AirQuality from "./AirQuality";
 import CurrentWeatherCard from "./CurrentWeather";
@@ -22,6 +23,10 @@ import SearchBar from "./SearchBar";
 import SunTimes from "./SunTimes";
 import WeatherBackground from "./WeatherBackground";
 import WeatherDetails from "./WeatherDetails";
+import WeatherAlerts from "./WeatherAlerts";
+import WeatherTips from "./WeatherTips";
+
+const REFRESH_MS = 10 * 60 * 1000;
 
 export default function WeatherDashboard() {
   const active = useAppSelector((s) => s.weather.active);
@@ -30,18 +35,16 @@ export default function WeatherDashboard() {
   const skip = !active;
   const coords = active ? { lat: active.lat, lon: active.lon } : { lat: 0, lon: 0 };
 
-  const currentQuery = useCurrentWeatherQuery(
-    { ...coords, units },
-    { skip, refetchOnMountOrArgChange: true }
-  );
-  const forecastQuery = useForecastQuery(
-    { ...coords, units },
-    { skip, refetchOnMountOrArgChange: true }
-  );
-  const aqiQuery = useAirPollutionQuery(coords, {
-    skip,
-    refetchOnMountOrArgChange: true
-  });
+  const queryOpts = { skip, refetchOnMountOrArgChange: true, pollingInterval: REFRESH_MS };
+  const currentQuery = useCurrentWeatherQuery({ ...coords, units }, queryOpts);
+  const forecastQuery = useForecastQuery({ ...coords, units }, queryOpts);
+  const aqiQuery = useAirPollutionQuery(coords, queryOpts);
+
+  // Only show skeletons when there's nothing to display for the current city/units;
+  // background refreshes keep the old data on screen.
+  const currentLoading = !currentQuery.currentData;
+  const forecastLoading = !forecastQuery.currentData;
+  const aqiLoading = !aqiQuery.currentData;
 
   useEffect(() => {
     if (currentQuery.error) {
@@ -61,6 +64,11 @@ export default function WeatherDashboard() {
     return resolveMood(c.weather[0], c.main.temp, isNight);
   }, [currentQuery.data]);
 
+  const alerts = useMemo(
+    () => buildAlerts(currentQuery.data, forecastQuery.data, aqiQuery.data, units),
+    [currentQuery.data, forecastQuery.data, aqiQuery.data, units]
+  );
+
   const locationLabel = active
     ? [active.name, active.state].filter(Boolean).join(", ")
     : "";
@@ -76,6 +84,8 @@ export default function WeatherDashboard() {
           {!active ? (
             <EmptyState />
           ) : (
+            <>
+            <WeatherAlerts alerts={alerts} cityKey={`${active.lat},${active.lon}`} />
             <Grid gutter="lg">
               <Grid.Col span={{ base: 12, md: 8 }}>
                 <Stack gap="lg">
@@ -84,7 +94,9 @@ export default function WeatherDashboard() {
                     locationLabel={locationLabel}
                     country={active.country}
                     units={units}
-                    isLoading={currentQuery.isFetching}
+                    isLoading={currentLoading}
+                    refreshing={currentQuery.isFetching}
+                    updatedAt={currentQuery.fulfilledTimeStamp}
                     onRefresh={() => {
                       currentQuery.refetch();
                       forecastQuery.refetch();
@@ -94,21 +106,21 @@ export default function WeatherDashboard() {
                   <WeatherDetails
                     data={currentQuery.data}
                     units={units}
-                    isLoading={currentQuery.isFetching}
+                    isLoading={currentLoading}
                   />
                   <HourlyForecast
                     data={forecastQuery.data}
                     units={units}
-                    isLoading={forecastQuery.isFetching}
+                    isLoading={forecastLoading}
                   />
                   <PrecipitationChart
                     data={forecastQuery.data}
-                    isLoading={forecastQuery.isFetching}
+                    isLoading={forecastLoading}
                   />
                   <DailyForecast
                     data={forecastQuery.data}
                     units={units}
-                    isLoading={forecastQuery.isFetching}
+                    isLoading={forecastLoading}
                   />
                 </Stack>
               </Grid.Col>
@@ -117,16 +129,24 @@ export default function WeatherDashboard() {
                 <Stack gap="lg">
                   <SunTimes
                     data={currentQuery.data}
-                    isLoading={currentQuery.isFetching}
+                    isLoading={currentLoading}
+                  />
+                  <WeatherTips
+                    current={currentQuery.data}
+                    forecast={forecastQuery.data}
+                    air={aqiQuery.data}
+                    units={units}
+                    isLoading={currentLoading}
                   />
                   <AirQuality
                     data={aqiQuery.data}
-                    isLoading={aqiQuery.isFetching}
+                    isLoading={aqiLoading}
                   />
                   <SavedCities />
                 </Stack>
               </Grid.Col>
             </Grid>
+            </>
           )}
 
           <Box mt="xl" pb="lg">
