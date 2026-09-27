@@ -1,0 +1,2 @@
+# Husky hooks are shell scripts; CRLF breaks them on macOS/Linux
+.husky/* text eol=lf
