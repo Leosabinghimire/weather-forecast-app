@@ -1,5 +1,5 @@
-import WeatherDashboard from "@/components/WeatherDashboard";
+import ClientDashboard from "@/components/ClientDashboard";
 
 export default function Page() {
-  return <WeatherDashboard />;
+  return <ClientDashboard />;
 }
